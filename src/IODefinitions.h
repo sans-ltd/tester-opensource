@@ -13,6 +13,8 @@ class IODefinitions
         static const IOPin CAN1_TX = GPIO_NUM_16;
         static const IOPin CAN1_RX = GPIO_NUM_17;
         static const IOPin CAN_SLEEP = GPIO_NUM_6;  // IO_OPT_1
+        static const IOPin I2C_SDA = GPIO_NUM_14;
+        static const IOPin I2C_SCL = GPIO_NUM_8; 
 
         static const IOPin IN1 = GPIO_NUM_11;
         static const IOPin IN2 = GPIO_NUM_10;
