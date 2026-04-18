@@ -22,16 +22,17 @@ class IODefinitions
         static const IOPin IN7 = GPIO_NUM_5;
         static const IOPin IN8 = GPIO_NUM_4;
 
-        static const IOPin OUT1 = GPIO_NUM_9;
+        // OUT1 was swapped with OUT9 up to rev. 0.3 
+        static const IOPin OUT1 = GPIO_NUM_7;   
         static const IOPin OUT2 = GPIO_NUM_18;
         static const IOPin OUT3 = GPIO_NUM_19;
         static const IOPin OUT4 = GPIO_NUM_20;
         static const IOPin OUT5 = GPIO_NUM_21;
         static const IOPin OUT6 = GPIO_NUM_22;
         static const IOPin OUT7 = GPIO_NUM_23;
-
         static const IOPin OUT8 = GPIO_NUM_15;
-        static const IOPin OUT9 = GPIO_NUM_7;  
+        // CAUTION: GPIO9 is pulled up to let the ESP boot correctly, which means that OUT9 is switched on to GND during standby.
+        static const IOPin OUT9 = GPIO_NUM_9;  
 
         static const std::array<IOPin, 8> INPUT_PINS;
         static const std::array<IOPin, 10> OUTPUT_PINS;
