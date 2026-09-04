@@ -1,5 +1,5 @@
 #include "VirtualLED.h"
-
+#ifdef COMPILE_VIRTUAL_LED
 VirtualLEDs::VirtualLEDs() {}
 
 void VirtualLED::operator=(uint32_t newState)
@@ -53,3 +53,4 @@ Adafruit_SSD1306* VirtualLEDs::getDisplay()
 {
     return display;
 }
+#endif

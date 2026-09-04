@@ -1,4 +1,5 @@
 #pragma once
+#ifdef COMPILE_VIRTUAL_LED
 #include <cstdint>
 #include <map>
 #define NO_ADAFRUIT_SSD1306_COLOR_COMPATIBILITY
@@ -47,4 +48,5 @@ private:
     std::map<uint8_t,VirtualLED> leds;
     Adafruit_SSD1306* display = nullptr;
 };
+#endif
 
