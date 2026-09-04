@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <vector>
 #include <soc/gpio_num.h>
 
 /**
@@ -38,4 +39,10 @@ class IODefinitions
         static const std::array<IOPin, 10> OUTPUT_PINS;
 
         static const IOPin UNDEFINED = GPIO_NUM_NC;
+
+        static void addManualInitPin(IOPin pin);
+        static void initGPIO();
+        
+    protected: 
+        static std::vector<IOPin> manualInitPins;
 };

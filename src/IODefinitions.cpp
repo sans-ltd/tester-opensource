@@ -1,4 +1,7 @@
 #include "IODefinitions.h"
+#include <algorithm>
+#include <Arduino.h>
+#include "Logger.h"
 
 const std::array<IODefinitions::IOPin, 8> IODefinitions::INPUT_PINS = {
     IODefinitions::UNDEFINED, // Stuffing for IN1, unavailable on MCU side 
@@ -23,3 +26,44 @@ const std::array<IODefinitions::IOPin, 10> IODefinitions::OUTPUT_PINS = {
     IODefinitions::CAN_SLEEP
 };
 
+std::vector<IODefinitions::IOPin> IODefinitions::manualInitPins;
+
+void IODefinitions::addManualInitPin(IOPin pin)
+{
+    manualInitPins.push_back(pin);
+}
+
+void IODefinitions::initGPIO()
+{
+#ifdef ARDUINO
+    for (auto pin: INPUT_PINS)
+    {
+        if (pin != UNDEFINED && std::find(manualInitPins.begin(), manualInitPins.end(), pin) == manualInitPins.end())
+        {
+            pinMode(pin, INPUT_PULLUP);
+        }
+        else
+        {
+            LOG_INFO("IODefs", "Not initializing GPIO[%d] as INPUT", pin);
+        }
+    }
+
+    for (auto pin: OUTPUT_PINS)
+    {
+        if (pin != UNDEFINED && std::find(manualInitPins.begin(), manualInitPins.end(), pin) == manualInitPins.end())
+        {
+            gpio_hold_dis(pin);
+            if (pin != GPIO_NUM_9)
+                pinMode(pin, OUTPUT);
+            else
+                pinMode(pin, OUTPUT_OPEN_DRAIN);  // wired to an external pull-up resistor on the PCB.
+        }
+        else
+        {
+            LOG_INFO("IODefs", "Not initializing GPIO[%d] as OUTPUT", pin);
+        }
+    }
+#else
+    #warning "IODefinitions::initGPIO() is not implemented for non-ARDUINO platforms"
+#endif
+}
