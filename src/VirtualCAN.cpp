@@ -3,9 +3,13 @@
 
 const char* VirtualCAN::TAG = "VCAN";
 
-VirtualCAN::VirtualCAN(CANBus _canBus, CANFrameHandler* nextHandler)
-    : CAN_COMMON(/* numFilt */ 1), canBus(_canBus), nextHandler(nextHandler)
+VirtualCAN::VirtualCAN(CANBus _canBus, CANFrameHandler* _nextHandler)
+    : CAN_COMMON(/* numFilt */ 1), canBus(_canBus)
 {
+    if (_nextHandler)
+        pluginHandler.setFinalFrameHandler(_nextHandler);
+    else
+        pluginHandler.setFinalFrameHandler(this);
 }
 
 int VirtualCAN::_setFilterSpecific(uint8_t mailbox, uint32_t id, uint32_t mask, bool extended)
@@ -55,10 +59,7 @@ void VirtualCAN::disable()
 
 bool VirtualCAN::sendFrame(CAN_FRAME& txFrame)
 {
-    if (plugins.size() > 0)
-    {
-        plugins[0]->processFrame(canBus, &txFrame);
-    }
+    pluginHandler.processFrameWithPlugins(canBus, &txFrame);
     return true;
 }
 
@@ -84,26 +85,13 @@ uint32_t VirtualCAN::get_rx_buff(CAN_FRAME &msg)
 
 void VirtualCAN::processFrame(CANBus bus, CAN_FRAME* frame)
 {
-    if (nextHandler != nullptr)
-        nextHandler->processFrame(CANBus::VIRTUAL_CAN, frame);
-    else
-    {
-        rxBuffer.push_back(*frame);
-        logInfo(TAG, "got from plugin:" + toString(bus, rxBuffer.back()) + ", rxBuffer size: " + rxBuffer.size());
-    }
+    rxBuffer.push_back(*frame);
+    logInfo(TAG, "got from plugin:" + toString(bus, rxBuffer.back()) + ", rxBuffer size: " + rxBuffer.size());
 }
 
 void VirtualCAN::addPlugin(CANPlugin* plugin)
 {
-    if (plugins.size() > 0)
-    {
-        plugin->setNextFrameHandler(plugins.back()->getNextFrameHandler());
-    }
-    else
-    {
-        plugin->setNextFrameHandler(this);
-    }
-    plugins.push_back(plugin);
+    pluginHandler.addPlugin(plugin);
 }
 
 int VirtualCAN::toNumber(CANBus bus)

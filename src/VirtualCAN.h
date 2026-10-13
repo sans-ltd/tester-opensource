@@ -2,7 +2,6 @@
 
 #include <can_common.h>
 #include "CANPlugin.h"
-#include "Logger.h"
 #include <vector>
 
 /**
@@ -37,7 +36,7 @@ private:
 
     int toNumber(CANBus bus);
 
-    std::vector<CANPlugin*> plugins;
     std::vector<CAN_FRAME> rxBuffer;
-    CANFrameHandler* nextHandler = nullptr;
+    CANFrameHandler* nextHandlerAfterThePlugins = nullptr;
+    CANPluginHandler pluginHandler;
 };
