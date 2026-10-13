@@ -43,7 +43,7 @@ class CANFrameHandler
             return memcmp(f1.data.uint8, f2.data.uint8, f1.length) == 0;
         }
 
-        #ifdef ARDUINO
+#ifdef ARDUINO
         static String toString(CANBus canBus, const CAN_FRAME &frame)
         {
             String msg;
@@ -79,21 +79,83 @@ class CANFrameHandler
             }
             return msg;
         }
-        #endif
+#endif
 };
 
 /**
- * A base class for CAN plugins, providing a mechanism to handle CAN frames and chain multiple handlers.
+ * A base class for CAN plugins which can react, forward, manipulate, and inject CAN frames.
  */
 class CANPlugin: public CANFrameHandler
 {
     public:
+        // A plugin can stop the processing of a frame by setting its ID to INVALID_FRAME_ID.
+        static constexpr uint32_t INVALID_FRAME_ID = 0xFFFFFFFF;
+
         virtual void begin() {}
         virtual void doLoop() {}
-        virtual void setNextFrameHandler(CANFrameHandler* handler) {nextCanFrameHandler = handler;}
-        virtual CANFrameHandler* getNextFrameHandler() const {return nextCanFrameHandler;}
-        virtual const char* getUseCase(CANBus canBus) const = 0;
-        
+
+        virtual const char* getUseCase(CANBus canBus) const = 0;      
+        // Sets the callback function to be called when a frame is injected.
+        void setInjectFrameCallback(std::function<void(const CANPlugin* source, CANBus, CAN_FRAME*)> callback) {
+            injectFrameCallback = callback;
+        }
+
     protected:
-        CANFrameHandler* nextCanFrameHandler = nullptr;
-};        
+        void injectFrame(CANBus bus, CAN_FRAME* frame) {
+            if (injectFrameCallback)
+                injectFrameCallback(this, bus, frame);
+        }
+
+    private:
+        std::function<void(const CANPlugin* source, CANBus, CAN_FRAME*)> injectFrameCallback;
+};
+
+// A handler that manages multiple CAN plugins and frame handlers and coordinates the injection and processing of CAN frames.
+class CANPluginHandler
+{
+    public:
+        void addPlugin(CANPlugin* plugin) {
+            plugin->setInjectFrameCallback([this](const CANPlugin* source, CANBus bus, CAN_FRAME* frame) {
+                this->onFrameInjected(source, bus, frame);
+            });
+            plugins.push_back(plugin);
+        }
+
+        void setFinalFrameHandler(CANFrameHandler* handler) {
+            finalFrameHandler = handler;
+        }
+
+        void processFrameWithPlugins(CANBus bus, CAN_FRAME* frame)  {
+            for (auto plugin : plugins) {
+                if (plugin == currentInjectingPlugin)
+                    continue;
+
+                plugin->processFrame(bus, frame);
+
+                if (frame->id == CANPlugin::INVALID_FRAME_ID)
+                    break;
+            }
+            
+            if (finalFrameHandler && frame->id != CANPlugin::INVALID_FRAME_ID) 
+            {
+                finalFrameHandler->processFrame(bus, frame);
+            }
+        }
+
+        bool isInjectedFrame() const {
+            return currentInjectingPlugin != nullptr;
+        }
+
+    private:
+        std::vector<CANPlugin*> plugins;
+
+        const CANPlugin* currentInjectingPlugin = nullptr;
+
+        virtual void onFrameInjected(const CANPlugin* source, CANBus bus, CAN_FRAME* frame) {
+            currentInjectingPlugin = source;
+            processFrameWithPlugins(bus, frame);
+            currentInjectingPlugin = nullptr;
+        }
+
+        CANFrameHandler* finalFrameHandler = nullptr;
+};
