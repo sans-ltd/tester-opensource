@@ -42,7 +42,7 @@ void GPIO_CANPlugin::doLoop()
         txFrame.data.uint8[0] = static_cast<uint8_t>(inputState >> 8);
         txFrame.data.uint8[1] = static_cast<uint8_t>(inputState & 0xFF);
         logInfo(TAG, "Sending " + toString(canBus, txFrame));
-        nextCanFrameHandler->processFrame(canBus, &txFrame);
+        injectFrame(canBus, &txFrame);
     }
 }
 
