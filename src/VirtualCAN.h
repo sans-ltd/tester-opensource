@@ -2,7 +2,6 @@
 
 #include <can_common.h>
 #include "CANPlugin.h"
-#include "Logger.h"
 #include <vector>
 
 /**
@@ -31,13 +30,16 @@ public:
     virtual void processFrame(CANBus bus, CAN_FRAME* frame) override;
     void addPlugin(CANPlugin* plugin);
 
+    void begin() {pluginHandler.begin();}
+    void doLoop() {pluginHandler.doLoop();}
+
 private:
     static const char* TAG;
     CANBus canBus;
 
     int toNumber(CANBus bus);
 
-    std::vector<CANPlugin*> plugins;
     std::vector<CAN_FRAME> rxBuffer;
-    CANFrameHandler* nextHandler = nullptr;
+    CANFrameHandler* nextHandlerAfterThePlugins = nullptr;
+    CANPluginHandler pluginHandler;
 };
