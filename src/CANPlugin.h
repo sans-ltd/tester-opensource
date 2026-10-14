@@ -146,6 +146,18 @@ class CANPluginHandler
             return currentInjectingPlugin != nullptr;
         }
 
+        void begin() {
+            for (auto plugin : plugins) {
+                plugin->begin();
+            }
+        }
+
+        void doLoop() {
+            for (auto plugin : plugins) {
+                plugin->doLoop();
+            }
+        }
+
     private:
         std::vector<CANPlugin*> plugins;
 

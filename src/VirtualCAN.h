@@ -30,6 +30,9 @@ public:
     virtual void processFrame(CANBus bus, CAN_FRAME* frame) override;
     void addPlugin(CANPlugin* plugin);
 
+    void begin() {pluginHandler.begin();}
+    void doLoop() {pluginHandler.doLoop();}
+
 private:
     static const char* TAG;
     CANBus canBus;
